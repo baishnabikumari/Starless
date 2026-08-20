@@ -1,0 +1,51 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body{
+    background: #0a0e17;
+    color: #c9d2e3;
+    font-family: system-ui, sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+#topbar{
+    padding: 12px 16px;
+    border-bottom: 1px solid #1a2130;
+}
+
+#search {
+    width: 100%;
+    padding: 8px 12px;
+    background: #10151f;
+    border: 1px solid #1a2130;
+    border-radius: 6px;
+    color: #c9d2e3;
+}
+
+main{
+    flex: 1;
+    position: relative;
+}
+
+#sky{
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+#controls{
+    padding: 12px 16px;
+    border-top: 1px solid #1a2130;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#time-slider{
+    flex: 1;
+}
