@@ -47,8 +47,6 @@ function renderSky(){
 
     const jd = getJulianDate(getCurrentSkyTime());
     const lst = getLST(jd, observerLon);
-    console.log('canvas size:', canvas.width, canvas.height, 'devicePixelRatio:', window.devicePixelRatio);
-    let visibleCount = 0;
 
     for (const star of stars){
         const altAz = raDecToAltAz(star.ra, star.dec, lst, observerLat);
@@ -58,8 +56,6 @@ function renderSky(){
         if(!pos) continue;
 
         const radius = Math.max(0.5, (6.5 - star.mag) / 2);
-        if(visibleCount < 5) console.log('star:', star.name || star.con, 'radius:', radius, 'pos:', pos);
-        visibleCount++;
         ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
         ctx.fillStyle = '#ffffff';
         ctx.fill();
@@ -85,7 +81,6 @@ function renderSky(){
             ctx.stroke();
         }
     }
-    console.log('total visible stars drawn:', visibleCount);
 }
 
 async function loadStars() {
