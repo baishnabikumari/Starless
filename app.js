@@ -4,6 +4,36 @@ const ctx = canvas.getContext('2d');
 let stars = [];
 let observerLat = 20;
 let observerLon = 0;
+let constellation = [];
+
+async function loadConstellations() {
+    const res = await fetch('data/constellations.json');
+    constellation = await res.json();
+    renderSky();
+}
+
+const timeSlider = document.getElementById('time-slider');
+const timeLabel = document.getElementById('time-label');
+
+function getCurrentSkyTime(){
+    const now = new Date();
+    const minutes = parseInt(timeSlider.value, 10);
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, mins);
+}
+
+function updateTimeLabel(){
+    const time = getCurrentSkyTime();
+    const h = String(time.getHours()).padStart(2, '0');
+    const m = String(time.getMinutes()).padStart(2, '0');
+    timeLabel.textContent = `${h}:${m}`;
+}
+
+timeSlider.addEventListener('input', () => {
+    updateTimeLabel();
+    renderSky();
+});
 
 function resizeCanvas(){
     canvas.width = canvas.clientWidth;
@@ -15,7 +45,7 @@ function renderSky(){
     ctx.fillStyle = '0a0e17';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const jd = getJulianDate(new Date());
+    const jd = getJulianDate(getCurrentSkyTime());
     const lst = getLST(jd, observerLon);
     console.log('canvas size:', canvas.width, canvas.height, 'devicePixelRatio:', window.devicePixelRatio);
     let visibleCount = 0;
@@ -33,6 +63,27 @@ function renderSky(){
         ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
         ctx.fillStyle = '#ffffff';
         ctx.fill();
+    }
+    ctx.strokeStyle = '#3a4a63';
+    ctx.lineWidth = 1;
+    for(const con of constellation){
+        for(const line of con.lines){
+            ctx.beginPath();
+            let started = false;
+            for(const[ra, dec] of line){
+                const altAz = raDecToAltAz(ra, dec, lst, observerLat);
+                if(altAz.alt < 0) {started = false; continue;}
+                const pos = altAzToScreen(altAz.alt, altAz.az, canvas.width, canvas.height);
+                if(!pos){ started = false; continue; }
+                if(!started){
+                    ctx.moveTo(pos.x, pos.y);
+                    started = true;
+                } else {
+                    ctx.lineTo(pos.x, pos.y);
+                }
+            }
+            ctx.stroke();
+        }
     }
     console.log('total visible stars drawn:', visibleCount);
 }
@@ -73,5 +124,6 @@ if(navigator.geolocation){
 
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
-resizeCanvas();
+updateTimeLabel();
 loadStars();
+loadConstellations();
