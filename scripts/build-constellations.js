@@ -43,15 +43,15 @@ for (const con of skyculture.constellations) {
 fs.writeFileSync('data/constellations.json', JSON.stringify(constellation));
 console.log(`wrote ${constellation.length} constellations to data/constellations.json`);
 
-function parseCsvLine(line){
+function parseCsvLine(line) {
     const out = [];
     let cur = [];
     let inQuotes = false;
-    for(let i = 0;i < line.length; i++){
+    for (let i = 0; i < line.length; i++) {
         const c = line[i];
-        if (c === '"'){
+        if (c === '"') {
             inQuotes = !inQuotes;
-        } else if (c === ',' && !inQuotes){
+        } else if (c === ',' && !inQuotes) {
             out.push(cur);
             cur = '';
         } else {

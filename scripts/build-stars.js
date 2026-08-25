@@ -18,7 +18,7 @@ console.log('idx:', idx);
 
 const stars = [];
 
-for(let i = 1; i < lines.length; i++){
+for (let i = 1; i < lines.length; i++) {
     const row = parseCsvLine(lines[i]);
     const mag = parseFloat(row[idx.mag]);
     if (isNaN(mag) || mag > 6.5) continue;
@@ -35,15 +35,15 @@ for(let i = 1; i < lines.length; i++){
 fs.writeFileSync('data/stars.json', JSON.stringify(stars));
 console.log(`wrote ${stars.length} stars to data/stars.json`);
 
-function parseCsvLine(line){
+function parseCsvLine(line) {
     const out = [];
     let cur = '';
     let inQuotes = false;
-    for (let i = 0; i < line.length; i++){
+    for (let i = 0; i < line.length; i++) {
         const c = line[i];
-        if (c === '"'){
+        if (c === '"') {
             inQuotes = !inQuotes;
-        } else if (c === ',' && !inQuotes){
+        } else if (c === ',' && !inQuotes) {
             out.push(cur);
             cur = '';
         } else {
