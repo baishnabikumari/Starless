@@ -14,10 +14,10 @@ let isDragging = false;
 let dragStartX = 0;
 let dragStartY = 0;
 
-function screenToLogical(x, y){
-    return{
+function screenToLogical(x, y) {
+    return {
         x: (x - (canvas.width / 2 + panX)) / zoom + canvas.width / 2,
-        y: (y - (canvas.height / 2 + panY)) / zoom + canvas.height / 2;
+        y: (y - (canvas.height / 2 + panY)) / zoom + canvas.height / 2
     };
 }
 
@@ -30,7 +30,7 @@ async function loadConstellations() {
 const timeSlider = document.getElementById('time-slider');
 const timeLabel = document.getElementById('time-label');
 
-function getCurrentSkyTime(){
+function getCurrentSkyTime() {
     const now = new Date();
     const minutes = parseInt(timeSlider.value, 10);
     const hours = Math.floor(minutes / 60);
@@ -38,7 +38,7 @@ function getCurrentSkyTime(){
     return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, mins);
 }
 
-function updateTimeLabel(){
+function updateTimeLabel() {
     const time = getCurrentSkyTime();
     const h = String(time.getHours()).padStart(2, '0');
     const m = String(time.getMinutes()).padStart(2, '0');
@@ -50,13 +50,13 @@ timeSlider.addEventListener('input', () => {
     renderSky();
 });
 
-function resizeCanvas(){
+function resizeCanvas() {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
     renderSky();
 }
 
-function renderSky(){
+function renderSky() {
     ctx.fillStyle = '0a0e17';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.save();
@@ -67,12 +67,12 @@ function renderSky(){
     const jd = getJulianDate(getCurrentSkyTime());
     const lst = getLST(jd, observerLon);
 
-    for (const star of stars){
+    for (const star of stars) {
         const altAz = raDecToAltAz(star.ra, star.dec, lst, observerLat);
-        if(altAz.alt < 0) continue;
+        if (altAz.alt < 0) continue;
 
         const pos = altAzToScreen(altAz.alt, altAz.az, canvas.width, canvas.height);
-        if(!pos) continue;
+        if (!pos) continue;
 
         const radius = Math.max(0.5, (6.5 - star.mag) / 2);
         renderedStars.push({ x: pos.x, y: pos.y, radius, star });
@@ -80,10 +80,10 @@ function renderSky(){
         ctx.fillStyle = '#ffffff';
         ctx.fill();
     }
-    if(highlightedStarName){
+    if (highlightedStarName) {
         const found = renderedStars.find(e => e.star.name === highlightedStarName);
         const tooltip = document.getElementById('star-tooltip');
-        if(found){
+        if (found) {
             ctx.beginPath();
             ctx.arc(found.x, found.y, found.radius + 6, 0, Math.PI * 2);
             ctx.strokeStyle = '#ffd76b';
@@ -108,19 +108,19 @@ function renderSky(){
 
     const labelPositions = [];
 
-    for(const con of constellation){
+    for (const con of constellation) {
         const visiblePoints = [];
 
-        for(const line of con.lines){
+        for (const line of con.lines) {
             ctx.beginPath();
             let started = false;
-            for(const[ra, dec] of line){
+            for (const [ra, dec] of line) {
                 const altAz = raDecToAltAz(ra, dec, lst, observerLat);
-                if(altAz.alt < 0) {started = false; continue;}
+                if (altAz.alt < 0) { started = false; continue; }
                 const pos = altAzToScreen(altAz.alt, altAz.az, canvas.width, canvas.height);
-                if(!pos){ started = false; continue; }
+                if (!pos) { started = false; continue; }
                 visiblePoints.push(pos);
-                if(!started){
+                if (!started) {
                     ctx.moveTo(pos.x, pos.y);
                     started = true;
                 } else {
@@ -130,26 +130,27 @@ function renderSky(){
             ctx.stroke();
         }
 
-        if(visiblePoints.length < 2) continue;
+        if (visiblePoints.length < 2) continue;
 
         let sumX = 0; sumY = 0;
-        for (const p of visiblePoints){ sumX += p.x; sumY += p.y; }
+        for (const p of visiblePoints) { sumX += p.x; sumY += p.y; }
         const labelX = sumX / visiblePoints.length;
         const labelY = sumY / visiblePoints.length;
 
         let tooClose = false;
-        for(const placed of labelPositions){
+        for (const placed of labelPositions) {
             const dx = placed.x - labelX;
             const dy = placed.y - labelY;
-            if(Math.sqrt(dx * dx + dy * dy) < 40) { tooClose = true; break; }
+            if (Math.sqrt(dx * dx + dy * dy) < 40) { tooClose = true; break; }
         }
         if (tooClose) continue;
 
         labelPositions.push({ x: labelX, y: labelY });
         ctx.fillStyle = '#7a86a3';
-        ctx.font = '11px ststem-ui, sans-serif';
-        ctx.fillTect(con.name, labelX, labelY);
+        ctx.font = '11px system-ui, sans-serif';
+        ctx.fillText(con.name, labelX, labelY);
     }
+    ctx.restore();
 }
 
 async function loadStars() {
@@ -158,54 +159,54 @@ async function loadStars() {
     renderSky();
 }
 
-function useLocation(position){
+function useLocation(position) {
     observerLat = position.coords.latitude;
     observerLon = position.coords.longitude;
     renderSky();
 }
 
-function locationFailed(){
+function locationFailed() {
     console.warn('location unavailable, using default lat and lon');
 }
 
-function updateLocationLabel(){
+function updateLocationLabel() {
     document.getElementById('location-label').textContent = `${observerLat.toFixed(2)}, ${observerLat.toFixed(2)}`;
 }
 
 document.getElementById('set-location').addEventListener('click', () => {
     const lat = parseFloat(document.getElementById('lat-input').value);
     const lon = parseFloat(document.getElementById('lon-input').value);
-    if(isNaN(lat) || isNaN(lon)) return;
+    if (isNaN(lat) || isNaN(lon)) return;
     observerLat = lat;
     observerLon = lon;
     updateLocationLabel();
     renderSky();
 });
 
-if(navigator.geolocation){
+if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(useLocation, locationFailed);
 }
 
 canvas.addEventListener('click', (e) => {
     const rect = canvas.getBoundingClientRect();
     const logical = screenToLogical(e.clientX - rect.left, e.clientY - rect.top);
-    const clickX = e.clientX - rect.left;
-    const clickY = e.clientY - rect.top;
+    const clickX = logical.x;
+    const clickY = logical.y;
 
     let closest = null;
     let closestDist = 15;
 
-    for (const entry of renderedStars){
+    for (const entry of renderedStars) {
         const dx = entry.x - clientX;
         const dy = entry.y - clientY;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if(dist < closestDist){
+        if (dist < closestDist) {
             closestDist = dist;
             closest = entry;
         }
     }
     const tooltip = document.getElementById('star-tooltip');
-    if(closest){
+    if (closest) {
         tooltip.textContent = closest.star.name || closest.star.con || 'Unnamed star';
         tooltip.style.left = closest.x + 'px';
         tooltip.style.top = closest.y + 'px';
@@ -215,14 +216,14 @@ canvas.addEventListener('click', (e) => {
     }
 });
 
-Document.getElementById('search').addEventListener('keydown', (e) => {
-    if(e.key !== 'Enter') return;
+document.getElementById('search').addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
     const query = e.target.value.trim().toLowerCase();
-    if(!query) return;
+    if (!query) return;
 
     const match = stars.find(s => s.name && s.name.toLowerCase() === query) || stars.find(s => s.name && s.name.toLowerCase().includes(query));
     const tooltip = document.getElementById('star-tooltip');
-    if(match){
+    if (match) {
         highlightedStarName = match.name;
         renderSky();
     } else {
@@ -246,7 +247,7 @@ canvas.addEventListener('mousedown', (e) => {
     dragStartY = e.clientY - panY;
 });
 window.addEventListener('mousemove', (e) => {
-    if(!isDragging) return;
+    if (!isDragging) return;
     panX = e.clientX - dragStartX;
     panY = e.clientY - dragStartY;
     renderSky();
