@@ -53,10 +53,25 @@ function locationFailed(){
     console.warn('location unavailable, using default lat and lon');
 }
 
+function updateLocationLabel(){
+    document.getElementById('location-label').textContent = `${observerLat.toFixed(2)}, ${observerLat.toFixed(2)}`;
+}
+
+document.getElementById('set-location').addEventListener('click', () => {
+    const lat = parseFloat(document.getElementById('lat-input').value);
+    const lon = parseFloat(document.getElementById('lon-input').value);
+    if(isNaN(lat) || isNaN(lon)) return;
+    observerLat = lat;
+    observerLon = lon;
+    updateLocationLabel();
+    renderSky();
+});
+
 if(navigator.geolocation){
     navigator.geolocation.getCurrentPosition(useLocation, locationFailed);
 }
 
 window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
 resizeCanvas();
 loadStars();

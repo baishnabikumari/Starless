@@ -9,6 +9,12 @@
 <body>
     <header id="topbar">
         <input type="text" id="search" placeholder="Search a star or constellation">
+        <div id="location-display">
+            <input type="number" id="lat-input" placeholder="Latitude" step="0.01">
+            <input type="number" id="lon-input" placeholder="Longitude" step="0.01">
+            <button id="set-location">Set</button>
+            <span id="location-label"></span>
+        </div>
     </header>
     <main>
         <canvas id="sky"></canvas>

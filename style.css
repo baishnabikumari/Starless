@@ -49,3 +49,34 @@ main{
 #time-slider{
     flex: 1;
 }
+
+#location-display{
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 13px;
+}
+
+#lat-input, #lon-input{
+    width: 90px;
+    padding: 4px 8px;
+    background: #10151f;
+    border: 1px solid #1a2130;
+    border-radius: 4px;
+    color: #c9d2e3;
+    cursor: pointer;
+}
+
+#set-location{
+    padding: 4px 10px;
+    background: #1a2130;
+    border: none;
+    border-radius: 4px;
+    color: #c9d2e3;
+    cursor: pointer;
+}
+
+#location-label{
+    align-self: center;
+    color: #7a86a3;
+}
