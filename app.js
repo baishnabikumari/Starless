@@ -6,6 +6,80 @@ let observerLat = 20;
 let observerLon = 0;
 let renderedStars = [];
 let highlightedStarName = null;
+let showGrid = false;
+let bortleLevel = 4;
+let isPlaying = false;
+
+function animateTimelapse(){
+    if(!isPlaying) return;
+    let value = parseInt(timeSlider.value, 10);
+    value = (value + 1) % 1440;
+    timeSlider.value = value;
+    updateTimeLabel();
+    renderSky();
+    requestAnimationFrame(animateTimelapse);
+}
+document.getElementById('play-timelapse').addEventListener('click', (e) => {
+    isPlaying = !isPlaying;
+    e.target.textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+    if(isPlaying)animateTimelapse();
+});
+
+const bortleLimits = { 1: 7.6, 2: 7.1, 3: 6.6, 4: 6.3, 5: 5.8, 6: 5.3, 7: 5.0, 8: 4.5, 9: 4.0};
+
+function drawLightPollution(){
+    if(bortleLevel <= 1) return;
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    const outerRadius = Math.min(canvas.width, canvas.height) / 2;
+    const intensity = (bortleLevel - 1) / 8;
+    const gradient = ctx.createRadialGradient(cx, cy, outerRadius * 0.6, cx, cy, outerRadius);
+    gradient.addColorStop(0, 'rgba(255, 170, 80, 0)');
+    gradient.addColorStop(0, `rgba(255, 170, 80, ${intensity * 0.35})`);
+
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(cx, cy, outerRadius, 0, Math.PI * 2);
+    ctx.fill();
+}
+document.getElementById('bortle-select').addEventListener('change', (e) => {
+    bortleLevel = parseInt(e.target.value, 10);
+    renderSky();
+});
+
+function drawGrid() {
+    if (!showGrid) return;
+    ctx.strokeStyle = '#2a3548';
+    ctx.lineWidth = 0.5;
+
+    for (const altLevel of [0, 30, 60]) {
+        ctx.beginPath();
+        for (let az = 0; az <= 360; az += 5) {
+            const pos = altAzToScreen(altLevel, az, canvas.width, canvas.height);
+            if (!pos) continue;
+            if (az === 0) ctx.moveTo(pos.x, pos.y);
+            else ctx.lineTo(pos.x, pos.y);
+        }
+        ctx.stroke();
+    }
+    for (let az = 0; az < 360; az += 30) {
+        ctx.beginPath();
+        let started = false;
+        for(let alt = 0; alt <= 90; alt += 5){
+            const pos = altAzToScreen(alt, az, canvas.width, canvas.height);
+            if (!pos) continue;
+            if (!started) { ctx.moveTo(pos.x, pos.y); started = true; }
+            else ctx.lineTo(pos.x, pos.y);
+        }
+        ctx.stroke();
+    }
+}
+document.getElementById('toggle-grid').addEventListener('click', (e) => {
+    showGrid = !showGrid;
+    e.target.classList.toggle('active', showGrid);
+    renderSky();
+});
+
 let constellation = [];
 let zoom = 1;
 let panX = 0;
@@ -59,8 +133,10 @@ function resizeCanvas() {
 function renderSky() {
     ctx.fillStyle = '0a0e17';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    drawLightPollution();
     ctx.save();
     ctx.translate(canvas.width / 2 + panX, canvas.height / 2 + panY);
+    drawGrid();
     ctx.scale(zoom, zoom);
     ctx.translate(-canvas.width / 2, -canvas.height / 2);
 
@@ -68,6 +144,7 @@ function renderSky() {
     const lst = getLST(jd, observerLon);
 
     for (const star of stars) {
+        if(star.mag > bortleLimits[bortleLevel]) continue;
         const altAz = raDecToAltAz(star.ra, star.dec, lst, observerLat);
         if (altAz.alt < 0) continue;
 

@@ -23,8 +23,21 @@
         <div id="star-tooltip"></div>
     </main>
     <footer id="controls">
+        <button id="play-timelapse">▶ Play</button>
         <input type="range" id="time-slider" min="0" max="1440" value="720">
         <span id="time-label"></span>
+        <button id="toggle-grid">Grid</button>
+        <select id="bortle-select">
+            <option value="1">Bortle 1 - excellent dark sky</option>
+            <option value="2">Bortle 2</option>
+            <option value="3">Bortle 3</option>
+            <option value="4" selected>Bortle 4 - Suburban</option>
+            <option value="5">Bortle 5</option>
+            <option value="6">Bortle 6</option>
+            <option value="7">Bortle 7</option>
+            <option value="8">Bortle 8</option>
+            <option value="9">Bortle 9 - Inner city</option>
+        </select>
     </footer>
     <script src="astronomy.js"></script>
     <script src="app.js"></script>
