@@ -96,7 +96,8 @@ main {
     transform: translate(-50%, -130%);
 }
 
-#controls button, #controls select{
+#controls button,
+#controls select {
     padding: 6px 12px;
     background: #10151f;
     border: 1px solid #1a2130;
@@ -106,40 +107,42 @@ main {
     cursor: pointer;
 }
 
-#controls button:hover{
+#controls button:hover {
     background: #1a2130;
 }
 
-#toggle-grid.active{
+#toggle-grid.active {
     background: #2a3548;
     color: #ffffff;
 }
 
-@media (max-width: 640px){
-    #topbar{
+@media (max-width: 640px) {
+    #topbar {
         flex-wrap: wrap;
     }
 
-    #location-display{
+    #location-display {
         width: 100;
     }
 
-    #lat-input, #lon-input {
+    #lat-input,
+    #lon-input {
         flex: 1;
         width: auto;
     }
 
-    #controls{
+    #controls {
         padding: 8px, 12px;
         gap: 8px;
     }
 
-    #controls button, #controls select{
+    #controls button,
+    #controls select {
         font-size: 12px;
         padding: 5px 8px;
     }
 
-    #bortle-select{
+    #bortle-select {
         max-width: 140px;
     }
 }
