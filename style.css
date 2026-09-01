@@ -114,3 +114,32 @@ main {
     background: #2a3548;
     color: #ffffff;
 }
+
+@media (max-width: 640px){
+    #topbar{
+        flex-wrap: wrap;
+    }
+
+    #location-display{
+        width: 100;
+    }
+
+    #lat-input, #lon-input {
+        flex: 1;
+        width: auto;
+    }
+
+    #controls{
+        padding: 8px, 12px;
+        gap: 8px;
+    }
+
+    #controls button, #controls select{
+        font-size: 12px;
+        padding: 5px 8px;
+    }
+
+    #bortle-select{
+        max-width: 140px;
+    }
+}
