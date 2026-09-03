@@ -21,7 +21,8 @@ function getLST(jd, longitude) {
 function raDecToAltAz(ra, dec, lst, lat) {
     const H = (lst - ra) * 15;
     const decRad = dec * Math.PI / 180;
-    const latRad = lat * Math.PI / 180;
+    const clampedLat = Math.max(-89.9999, Math.min(89.9999, lat));
+    const latRad = clampedLat * Math.PI / 180;
     const hRad = H * Math.PI / 180;
     const sinAlt = Math.sin(decRad) * Math.sin(latRad) + Math.cos(decRad) * Math.cos(latRad) * Math.cos(hRad);
     const alt = Math.asin(sinAlt);

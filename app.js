@@ -88,6 +88,17 @@ let isDragging = false;
 let dragStartX = 0;
 let dragStartY = 0;
 
+let renderPending = false;
+
+function scheduleRender(){
+    if(renderPending) return;
+    renderPending = true;
+    requestAnimationFrame(() => {
+        renderPending = false;
+        renderSky();
+    });
+}
+
 function screenToLogical(x, y) {
     return {
         x: (x - (canvas.width / 2 + panX)) / zoom + canvas.width / 2,
@@ -244,6 +255,7 @@ function useLocation(position) {
 
 function locationFailed() {
     console.warn('location unavailable, using default lat and lon');
+    document.getElementById('location-label').textContent = 'Location unavialable - using default';
 }
 
 function updateLocationLabel() {
@@ -316,7 +328,7 @@ canvas.addEventListener('wheel', (e) => {
     e.preventDefault();
     zoom *= e.deltaY < 0 ? 1.1 : 0.9;
     zoom = Math.max(0.5, Math.min(zoom, 5));
-    renderSky();
+    scheduleRender();
 });
 canvas.addEventListener('mousedown', (e) => {
     isDragging = true;
@@ -327,7 +339,7 @@ window.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
     panX = e.clientX - dragStartX;
     panY = e.clientY - dragStartY;
-    renderSky();
+    scheduleRender();
 });
 window.addEventListener('mouseup', () => {
     isDragging = false;
