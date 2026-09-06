@@ -10,8 +10,8 @@ let showGrid = false;
 let bortleLevel = 4;
 let isPlaying = false;
 
-function animateTimelapse(){
-    if(!isPlaying) return;
+function animateTimelapse() {
+    if (!isPlaying) return;
     let value = parseInt(timeSlider.value, 10);
     value = (value + 1) % 1440;
     timeSlider.value = value;
@@ -22,20 +22,20 @@ function animateTimelapse(){
 document.getElementById('play-timelapse').addEventListener('click', (e) => {
     isPlaying = !isPlaying;
     e.target.textContent = isPlaying ? '⏸ Pause' : '▶ Play';
-    if(isPlaying)animateTimelapse();
+    if (isPlaying) animateTimelapse();
 });
 
-const bortleLimits = { 1: 7.6, 2: 7.1, 3: 6.6, 4: 6.3, 5: 5.8, 6: 5.3, 7: 5.0, 8: 4.5, 9: 4.0};
+const bortleLimits = { 1: 7.6, 2: 7.1, 3: 6.6, 4: 6.3, 5: 5.8, 6: 5.3, 7: 5.0, 8: 4.5, 9: 4.0 };
 
-function drawLightPollution(){
-    if(bortleLevel <= 1) return;
+function drawLightPollution() {
+    if (bortleLevel <= 1) return;
     const cx = canvas.width / 2;
     const cy = canvas.height / 2;
     const outerRadius = Math.min(canvas.width, canvas.height) / 2;
     const intensity = (bortleLevel - 1) / 8;
     const gradient = ctx.createRadialGradient(cx, cy, outerRadius * 0.6, cx, cy, outerRadius);
     gradient.addColorStop(0, 'rgba(255, 170, 80, 0)');
-    gradient.addColorStop(0, `rgba(255, 170, 80, ${intensity * 0.35})`);
+    gradient.addColorStop(1, `rgba(255, 170, 80, ${intensity * 0.35})`);
 
     ctx.fillStyle = gradient;
     ctx.beginPath();
@@ -65,7 +65,7 @@ function drawGrid() {
     for (let az = 0; az < 360; az += 30) {
         ctx.beginPath();
         let started = false;
-        for(let alt = 0; alt <= 90; alt += 5){
+        for (let alt = 0; alt <= 90; alt += 5) {
             const pos = altAzToScreen(alt, az, canvas.width, canvas.height);
             if (!pos) continue;
             if (!started) { ctx.moveTo(pos.x, pos.y); started = true; }
@@ -90,8 +90,8 @@ let dragStartY = 0;
 
 let renderPending = false;
 
-function scheduleRender(){
-    if(renderPending) return;
+function scheduleRender() {
+    if (renderPending) return;
     renderPending = true;
     requestAnimationFrame(() => {
         renderPending = false;
@@ -141,8 +141,51 @@ function resizeCanvas() {
     renderSky();
 }
 
+let skyCache = null;
+
+function getSkyCacheKey() {
+    return [timeSlider.value, observerLat ,observerLon, canvas.width, canvas.height, bortleLevel].join('|');
+}
+
+function computerSkyData() {
+    const jd = getJulianDate(getCurrentSkyTime());
+    const lst = getLST(jd, observerLon);
+
+    const starPositions = [];
+    for (const star of stars) {
+        if (star.mag > bortleLimits[bortleLevel]) continue;
+        const altAz = raDecToAltAz(star.ra, star.dec, lst, observerLat);
+        if (altAz.alt < 0) continue;
+        const pos = altAzToScreen(altAz.alt, altAz.az, canvas.width, canvas.height);
+        if (!pos) continue;
+        const radius = Math.max(0.5, (6.5 - star.mag) / 2);
+        starPositions.push({ x: pos.x, y: pos.y, radius, star });
+    }
+    const conLines = [];
+    for (const con of constellation) {
+        const segments = [];
+        for (const line of con.lines) {
+            const points = [];
+            for (const [ra, dec] of line) {
+                const altAz = raDecToAltAz(ra, dec, lst, observerLat);
+                points.push(altAz.alt < 0 ? null : altAzToScreen(altAz.alt, altAz.az, canvas.width, canvas.height));
+            }
+            segments.push(points);
+        }
+        conLines.push({ name: con.name, segments });
+    }
+    return { starPositions, conLines }
+}
+function getSkyData() {
+    const key = getSkyCacheKey();
+    if (!skyCache || skyCache.key !== key) {
+        skyCache = { key, ...computerSkyData() };
+    }
+    return skyCache;
+}
+
 function renderSky() {
-    ctx.fillStyle = '0a0e17';
+    ctx.fillStyle = '#0a0e17';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     drawLightPollution();
     ctx.save();
@@ -151,23 +194,17 @@ function renderSky() {
     ctx.scale(zoom, zoom);
     ctx.translate(-canvas.width / 2, -canvas.height / 2);
 
-    const jd = getJulianDate(getCurrentSkyTime());
-    const lst = getLST(jd, observerLon);
+    const { starPositions, conLines } = getSkyData();
+    renderedStars = starPositions;
 
-    for (const star of stars) {
-        if(star.mag > bortleLimits[bortleLevel]) continue;
-        const altAz = raDecToAltAz(star.ra, star.dec, lst, observerLat);
-        if (altAz.alt < 0) continue;
-
-        const pos = altAzToScreen(altAz.alt, altAz.az, canvas.width, canvas.height);
-        if (!pos) continue;
-
-        const radius = Math.max(0.5, (6.5 - star.mag) / 2);
-        renderedStars.push({ x: pos.x, y: pos.y, radius, star });
-        ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = '#ffffff';
-        ctx.fill();
+    ctx.beginPath();
+    for (const s of starPositions) {
+        ctx.moveTo(s.x + s.radius, s.y);
+        ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
     }
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+
     if (highlightedStarName) {
         const found = renderedStars.find(e => e.star.name === highlightedStarName);
         const tooltip = document.getElementById('star-tooltip');
@@ -189,31 +226,24 @@ function renderSky() {
             tooltip.style.display = 'block';
         }
     }
-
-    renderedStars = [];
     ctx.strokeStyle = '#3a4a63';
     ctx.lineWidth = 1;
-
     const labelPositions = [];
 
-    for (const con of constellation) {
+    for (const con of conLines) {
         const visiblePoints = [];
 
-        for (const line of con.lines) {
+        for (const points of con.segments) {
             ctx.beginPath();
             let started = false;
-            for (const [ra, dec] of line) {
-                const altAz = raDecToAltAz(ra, dec, lst, observerLat);
-                if (altAz.alt < 0) { started = false; continue; }
-                const pos = altAzToScreen(altAz.alt, altAz.az, canvas.width, canvas.height);
+            for (const pos of points) {
                 if (!pos) { started = false; continue; }
                 visiblePoints.push(pos);
                 if (!started) {
                     ctx.moveTo(pos.x, pos.y);
                     started = true;
-                } else {
-                    ctx.lineTo(pos.x, pos.y);
                 }
+                else ctx.lineTo(pos.x, pos.y);
             }
             ctx.stroke();
         }
@@ -259,7 +289,7 @@ function locationFailed() {
 }
 
 function updateLocationLabel() {
-    document.getElementById('location-label').textContent = `${observerLat.toFixed(2)}, ${observerLat.toFixed(2)}`;
+    document.getElementById('location-label').textContent = `${observerLat.toFixed(2)}, ${observerLon.toFixed(2)}`;
 }
 
 document.getElementById('set-location').addEventListener('click', () => {
@@ -286,8 +316,8 @@ canvas.addEventListener('click', (e) => {
     let closestDist = 15;
 
     for (const entry of renderedStars) {
-        const dx = entry.x - clientX;
-        const dy = entry.y - clientY;
+        const dx = entry.x - clickX;
+        const dy = entry.y - clickY;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < closestDist) {
             closestDist = dist;
