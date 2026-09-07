@@ -45,7 +45,7 @@ console.log(`wrote ${constellation.length} constellations to data/constellations
 
 function parseCsvLine(line) {
     const out = [];
-    let cur = [];
+    let cur = '';
     let inQuotes = false;
     for (let i = 0; i < line.length; i++) {
         const c = line[i];

@@ -147,7 +147,7 @@ function getSkyCacheKey() {
     return [timeSlider.value, observerLat ,observerLon, canvas.width, canvas.height, bortleLevel].join('|');
 }
 
-function computerSkyData() {
+function computeSkyData() {
     const jd = getJulianDate(getCurrentSkyTime());
     const lst = getLST(jd, observerLon);
 
@@ -179,7 +179,7 @@ function computerSkyData() {
 function getSkyData() {
     const key = getSkyCacheKey();
     if (!skyCache || skyCache.key !== key) {
-        skyCache = { key, ...computerSkyData() };
+        skyCache = { key, ...computeSkyData() };
     }
     return skyCache;
 }
@@ -187,12 +187,12 @@ function getSkyData() {
 function renderSky() {
     ctx.fillStyle = '#0a0e17';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    drawLightPollution();
     ctx.save();
     ctx.translate(canvas.width / 2 + panX, canvas.height / 2 + panY);
     drawGrid();
     ctx.scale(zoom, zoom);
     ctx.translate(-canvas.width / 2, -canvas.height / 2);
+    drawLightPollution();
 
     const { starPositions, conLines } = getSkyData();
     renderedStars = starPositions;
@@ -250,7 +250,7 @@ function renderSky() {
 
         if (visiblePoints.length < 2) continue;
 
-        let sumX = 0; sumY = 0;
+        let sumX = 0, sumY = 0;
         for (const p of visiblePoints) { sumX += p.x; sumY += p.y; }
         const labelX = sumX / visiblePoints.length;
         const labelY = sumY / visiblePoints.length;
@@ -280,6 +280,7 @@ async function loadStars() {
 function useLocation(position) {
     observerLat = position.coords.latitude;
     observerLon = position.coords.longitude;
+    updateLocationLabel();
     renderSky();
 }
 

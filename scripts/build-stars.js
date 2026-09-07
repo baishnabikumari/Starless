@@ -22,6 +22,7 @@ for (let i = 1; i < lines.length; i++) {
     const row = parseCsvLine(lines[i]);
     const mag = parseFloat(row[idx.mag]);
     if (isNaN(mag) || mag > 6.5) continue;
+    if (row[idx.proper] === 'Sol') continue;
 
     stars.push({
         ra: parseFloat(row[idx.ra]),

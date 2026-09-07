@@ -27,9 +27,15 @@ function raDecToAltAz(ra, dec, lst, lat) {
     const sinAlt = Math.sin(decRad) * Math.sin(latRad) + Math.cos(decRad) * Math.cos(latRad) * Math.cos(hRad);
     const alt = Math.asin(sinAlt);
 
-    const cosAz = (Math.sin(decRad) - Math.sin(alt) * Math.sin(latRad)) / (Math.cos(alt) * Math.cos(latRad));
-    let az = Math.acos(Math.max(-1, Math.min(1, cosAz)));
-    if (Math.sin(hRad) > 0) az = 2 * Math.PI - az;
+    const denom = Math.cos(alt) * Math.cos(latRad);
+    let az;
+    if(Math.abs(denom) < 1e-10){
+        az = 0;
+    } else {
+        const cosAz = (Math.sin(decRad) - Math.sin(alt) * Math.sin(latRad)) / denom;
+        az = Math.acos(Math.max(-1, Math.min(1, cosAz)));
+        if (Math.sin(hRad) > 0) az = 2 * Math.PI - az;
+    }
 
     return { alt: alt * 180 / Math.PI, az: az * 180 / Math.PI };
 }
